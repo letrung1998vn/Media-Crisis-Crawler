@@ -2,12 +2,7 @@
 {% block content %}
     <form method="GET" action="{% url 'blog-about' %}" >
         {% csrf_token %}
-        <select name="keyword" >
-            <option value="hospital">hospital</option>
-            <option value="corona">corona</option>
-            <option value="banhmi">banhmi</option>
-            <option value="vietnam">vietnam</option>
-        </select>
+        
         <input type="submit" value="Crawl"/>
     </form>
 {% endblock %}
