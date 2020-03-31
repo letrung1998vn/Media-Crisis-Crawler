@@ -15,7 +15,7 @@ auth = tweepy.OAuthHandler("AlyWx6jjnYtLDXth2p7XT33xD",
                            "Ofz2WoZ4PzhXzpKWlAbDvRvQFa0CO3RgvCzv8Nbfes2f2u9NPe")
 auth.set_access_token("1220190253228494850-Ta7PGsjS8X9ZIr6g4S6nV6mhBA0XCy",
                       "bwgxLkJiRU86VYyu3ptqIIM0atlv8LTjlVmzHR9XuOhf3")
-api = tweepy.API(auth)
+api = tweepy.API(auth, wait_on_rate_limit = True)
 
 def home(request):
     
@@ -24,7 +24,7 @@ def home(request):
 
 # tweets/home.html là tên folder chứa trang html
 def about(request):
-    max_tweets = 1
+    max_tweets = 0
 
     list_keyword = Keyword_Crawler.objects.all()
     for item in list_keyword:

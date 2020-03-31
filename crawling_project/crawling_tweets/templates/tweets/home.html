@@ -2,7 +2,6 @@
 {% block content %}
     <form method="GET" action="{% url 'blog-about' %}" >
         {% csrf_token %}
-        
         <input type="submit" value="Crawl"/>
     </form>
 {% endblock %}
