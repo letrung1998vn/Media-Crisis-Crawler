@@ -12,6 +12,7 @@ class Post(models.Model):
     number_of_react = models.FloatField()
     crawl_date = models.DateTimeField(['%Y-%m-%d %H:%M:%S'])
     keyword = models.CharField(max_length=50)
+    isNew = models.BooleanField(default=True)
     class Meta:
         db_table = "Post"
     def __str__(self): 

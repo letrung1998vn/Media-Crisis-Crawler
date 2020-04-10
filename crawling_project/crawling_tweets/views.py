@@ -25,7 +25,6 @@ def home(request):
 # tweets/home.html là tên folder chứa trang html
 def about(request):
     max_tweets = 0
-
     list_keyword = Keyword_Crawler.objects.all()
     for item in list_keyword:
         number_of_reply = 0
@@ -49,8 +48,7 @@ def about(request):
                 p = Post.objects.create( 
                     uuid_post= uuid.uuid4(), post_id = tweet_id ,post_content= post_content,create_date= create_date,
                     link_detail= link_detail, number_of_reply= 0,
-                    number_of_retweet=number_of_retweet,number_of_react= number_of_react,crawl_date= crawl_date, keyword= query 
-                    )
+                    number_of_retweet=number_of_retweet,number_of_react= number_of_react,crawl_date= crawl_date, keyword= query)
                 p.save()
                 uuid_post = p.uuid_post
                 uuid_post_in_reply = Post.objects.only('uuid_post').get(uuid_post = uuid_post)
@@ -83,6 +81,9 @@ def about(request):
                         except tweepy.TweepError as e:
                             logging.error("Tweepy error occured:{}".format(e))
                             break
+                        except tweepy.TweepError:
+                            time.sleep(120)
+                            continue
                         except Exception as e:
                             logging.error("Failed while fetching replies {}".format(e))
                             break
