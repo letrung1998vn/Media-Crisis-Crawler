@@ -1,7 +1,11 @@
+
 {% extends "tweets/base.html" %}
 {% block content %}
     <form method="GET" action="{% url 'blog-about' %}" >
         {% csrf_token %}
-        <input type="submit" value="Crawl"/>
+        <input class="btn btn-primary" type="submit" value="Crawl"/>
     </form>
-{% endblock %}
+{% endblock content %}
+
+
+

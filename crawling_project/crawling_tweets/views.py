@@ -1,4 +1,4 @@
-from django.shortcuts import render , redirect
+from django.shortcuts import render , redirect 
 from django.utils import timezone
 from .models import Post , Comment , Keyword_Crawler, Keyword
 from urllib.request import urlopen
@@ -9,22 +9,24 @@ import time
 import pyodbc
 import uuid
 import pytz
+ACCESS_TOKEN = "1220190253228494850-Ta7PGsjS8X9ZIr6g4S6nV6mhBA0XCy"
+ACCESS_TOKEN_SECRET = "bwgxLkJiRU86VYyu3ptqIIM0atlv8LTjlVmzHR9XuOhf3"
+CONSUMER_KEY = "AlyWx6jjnYtLDXth2p7XT33xD"
+COMSUMER_SECRET= "Ofz2WoZ4PzhXzpKWlAbDvRvQFa0CO3RgvCzv8Nbfes2f2u9NPe"
 
 
-auth = tweepy.OAuthHandler("AlyWx6jjnYtLDXth2p7XT33xD",
-                           "Ofz2WoZ4PzhXzpKWlAbDvRvQFa0CO3RgvCzv8Nbfes2f2u9NPe")
-auth.set_access_token("1220190253228494850-Ta7PGsjS8X9ZIr6g4S6nV6mhBA0XCy",
-                      "bwgxLkJiRU86VYyu3ptqIIM0atlv8LTjlVmzHR9XuOhf3")
+
+
+auth = tweepy.OAuthHandler(CONSUMER_KEY,COMSUMER_SECRET)
+auth.set_access_token(ACCESS_TOKEN,ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit = True)
 
 def home(request):
-    
-
     return render(request, 'tweets/home.html')
 
 # tweets/home.html là tên folder chứa trang html
 def about(request):
-    max_tweets = 0
+    max_tweets = 10
     list_keyword = Keyword_Crawler.objects.all()
     for item in list_keyword:
         number_of_reply = 0
@@ -72,8 +74,8 @@ def about(request):
                                 link_detail= link_reply_detail , 
                                 number_of_reply =reply.retweet_count, number_of_react=reply.favorite_count,
                                 crawl_date= crawl_date)
-                                number_of_reply += 1;
                                 c.save()    
+                                number_of_reply += 1;
                         except tweepy.RateLimitError as e:
                             logging.error("Twitter api rate limit reached {}".format(e)) 
                             time.sleep(900) 
@@ -89,10 +91,7 @@ def about(request):
                             break
                 updateReply = Post.objects.get(uuid_post = uuid_post)
                 updateReply.number_of_reply = number_of_reply
-                updateReply.save(update_fields=['number_of_reply'])
-
-
-    html = urlopen("https://webhook.site/11264d57-0437-4529-93bf-bd75d9a9c454").read()                
+                updateReply.save(update_fields=['number_of_reply'], force_update = True)            
     return redirect('blog-home')
 
    
