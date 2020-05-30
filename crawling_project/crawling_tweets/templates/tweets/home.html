@@ -3,7 +3,13 @@
 {% block content %}
     <form method="GET" action="{% url 'blog-about' %}" >
         {% csrf_token %}
-        <input class="btn btn-primary" type="submit" value="Crawl"/>
+        <input type="hidden" name="lang" value="eng"/>
+        <input class="btn btn-primary" type="submit" value="Crawl ENG"/>
+    </form>
+    <form method="GET" action="{% url 'blog-about' %}" >
+        {% csrf_token %}
+        <input type="hidden" name="lang" value="vie"/>
+        <input class="btn btn-primary" type="submit" value="Crawl VIE"/>
     </form>
 {% endblock content %}
 

@@ -78,7 +78,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'sql_server.pyodbc',
         'NAME':'Media_crisis',
-        'HOST':'media-crisis.database.windows.net',
+        'HOST':'media-crisis-2.database.windows.net',
         'USER':'media-crisis',
         'PASSWORD':'Letrung123',
         'OPTION':{

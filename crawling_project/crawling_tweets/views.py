@@ -26,73 +26,147 @@ def home(request):
 
 # tweets/home.html là tên folder chứa trang html
 def about(request):
-    while True:
-        max_tweets = 10
-        list_keyword = Keyword_Crawler.objects.all()
-        for item in list_keyword:
-            number_of_reply = 0
-            query = item.keyword
-            for status in tweepy.Cursor(api.search , q=query, tweet_mode='extended',lang='en').items(max_tweets):
-                    print("STATUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")  
-                    tweet_id = status.id
-                    username = status.user.screen_name
-                    number_of_retweet = status.retweet_count
-                    create_date = status.created_at.replace(tzinfo=pytz.UTC)
-                    link_detail = 'https://twitter.com/',username,'/status/',tweet_id
-                    post_content = status.full_text.encode('utf-8')
-                    print('The Original Tweet User: ', username)
-                    print('The Original Tweet Post ID: ',tweet_id)
-                    print('keyword:', query)
-                    if not hasattr(status, 'retweeted_status'):
-                        number_of_react = status.favorite_count
-                    if hasattr(status, 'retweeted_status'):
-                        number_of_react = status.retweeted_status.favorite_count
-                    crawl_date = timezone.now()   
-                    p = Post.objects.create( 
-                        uuid_post= uuid.uuid4(), post_id = tweet_id ,post_content= post_content,create_date= create_date,
-                        link_detail= link_detail, number_of_reply= 0,
-                        number_of_retweet=number_of_retweet,number_of_react= number_of_react,crawl_date= crawl_date, keyword= query)
-                    p.save()
-                    uuid_post = p.uuid_post
-                    uuid_post_in_reply = Post.objects.only('uuid_post').get(uuid_post = uuid_post)
-                    
-                    for reply in tweepy.Cursor(api.search, q='to:{}'.format(username),
-                                                since_id=tweet_id, tweet_mode='extended', lang='en').items():                         
-                            try:
-                                if not hasattr(reply, 'in_reply_to_status_id_str'):
+    lang = request.GET.get('lang');
+    if('vie' in lang):
+        while True:
+            max_tweets = 10
+            list_keyword = Keyword_Crawler.objects.all()
+            for item in list_keyword:
+                number_of_reply = 0
+                query = item.keyword
+                for status in tweepy.Cursor(api.search , q=query, tweet_mode='extended',lang='vi').items(max_tweets):
+                        print("STATUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")  
+                        tweet_id = status.id
+                        username = status.user.screen_name
+                        number_of_retweet = status.retweet_count
+                        create_date = status.created_at.replace(tzinfo=pytz.UTC)
+                        link_detail = 'https://twitter.com/',username,'/status/',tweet_id
+                        language = 'vi'
+                        post_content = status.full_text.encode('utf-8')
+                        print('The Original Tweet User: ', username)
+                        print('The Original Tweet Post ID: ',tweet_id)
+                        print('keyword:', query)
+                        if not hasattr(status, 'retweeted_status'):
+                            number_of_react = status.favorite_count
+                        if hasattr(status, 'retweeted_status'):
+                            number_of_react = status.retweeted_status.favorite_count
+                        crawl_date = timezone.now()   
+                        p = Post.objects.create( 
+                            uuid_post= uuid.uuid4(), post_id = tweet_id ,post_content= post_content,create_date= create_date,
+                            link_detail= link_detail, number_of_reply= 0, language = language,
+                            number_of_retweet=number_of_retweet,number_of_react= number_of_react,crawl_date= crawl_date, keyword= query)
+                        p.save()
+                        uuid_post = p.uuid_post
+                        uuid_post_in_reply = Post.objects.only('uuid_post').get(uuid_post = uuid_post)
+                        
+                        for reply in tweepy.Cursor(api.search, q='to:{}'.format(username),
+                                                    since_id=tweet_id, tweet_mode='extended', lang='vi').items():                         
+                                try:
+                                    if not hasattr(reply, 'in_reply_to_status_id_str'):
+                                        continue
+                                    if reply.in_reply_to_status_id == tweet_id:
+                                        print("REPLYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+                                        print(reply.user.screen_name,':')
+                                        print(reply.full_text.encode('utf-8'))
+                                        link_reply_detail = 'https://twitter.com/',reply.user.screen_name,'/status/',reply.id
+                                        print("this is reply tweet's share: ", reply.retweet_count)
+                                        print("this is reply tweet's like: ", reply.favorite_count)
+                                        language = 'vi'
+                                        reply_create = reply.created_at.replace(tzinfo=pytz.UTC)
+                                        c = Comment.objects.create(
+                                        uuid_comment= uuid.uuid4(), uuid_post = uuid_post_in_reply, comment_id=reply.id,
+                                        comment_content= reply.full_text.encode('utf-8'), create_date =reply_create,
+                                        link_detail= link_reply_detail , language = language,
+                                        number_of_reply =reply.retweet_count, number_of_react=reply.favorite_count,
+                                        crawl_date= crawl_date)
+                                        c.save()    
+                                        number_of_reply += 1;
+                                except tweepy.RateLimitError as e:
+                                    logging.error("Twitter api rate limit reached {}".format(e)) 
+                                    time.sleep(900) 
                                     continue
-                                if reply.in_reply_to_status_id == tweet_id:
-                                    print("REPLYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
-                                    print(reply.user.screen_name,':')
-                                    print(reply.full_text.encode('utf-8'))
-                                    link_reply_detail = 'https://twitter.com/',reply.user.screen_name,'/status/',reply.id
-                                    print("this is reply tweet's share: ", reply.retweet_count)
-                                    print("this is reply tweet's like: ", reply.favorite_count)
-                                    reply_create = reply.created_at.replace(tzinfo=pytz.UTC)
-                                    c = Comment.objects.create(
-                                    uuid_comment= uuid.uuid4(), uuid_post = uuid_post_in_reply, comment_id=reply.id,
-                                    comment_content= reply.full_text.encode('utf-8'), create_date =reply_create,
-                                    link_detail= link_reply_detail , 
-                                    number_of_reply =reply.retweet_count, number_of_react=reply.favorite_count,
-                                    crawl_date= crawl_date)
-                                    c.save()    
-                                    number_of_reply += 1;
-                            except tweepy.RateLimitError as e:
-                                logging.error("Twitter api rate limit reached {}".format(e)) 
-                                time.sleep(900) 
-                                continue
-                            except tweepy.TweepError as e:
-                                logging.error("Tweepy error occured:{}".format(e))
-                                break
-                            except tweepy.TweepError:
-                                time.sleep(120)
-                                continue
-                            except Exception as e:
-                                logging.error("Failed while fetching replies {}".format(e))
-                                break
-                    updateReply = Post.objects.get(uuid_post = uuid_post)
-                    updateReply.number_of_reply = number_of_reply
-                    updateReply.save(update_fields=['number_of_reply'], force_update = True)            
+                                except tweepy.TweepError as e:
+                                    logging.error("Tweepy error occured:{}".format(e))
+                                    break
+                                except tweepy.TweepError:
+                                    time.sleep(120)
+                                    continue
+                                except Exception as e:
+                                    logging.error("Failed while fetching replies {}".format(e))
+                                    break
+                        updateReply = Post.objects.get(uuid_post = uuid_post)
+                        updateReply.number_of_reply = number_of_reply
+                        updateReply.save(update_fields=['number_of_reply'], force_update = True)
+    if('eng' in lang):
+        while True:
+                max_tweets = 10
+                list_keyword = Keyword_Crawler.objects.all()
+                for item in list_keyword:
+                    number_of_reply = 0
+                    query = item.keyword
+                    for status in tweepy.Cursor(api.search , q=query, tweet_mode='extended',lang='en').items(max_tweets):
+                            print("STATUSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")  
+                            tweet_id = status.id
+                            username = status.user.screen_name
+                            number_of_retweet = status.retweet_count
+                            create_date = status.created_at.replace(tzinfo=pytz.UTC)
+                            link_detail = 'https://twitter.com/',username,'/status/',tweet_id
+                            language = 'en'
+                            post_content = status.full_text.encode('utf-8')
+                            print('The Original Tweet User: ', username)
+                            print('The Original Tweet Post ID: ',tweet_id)
+                            print('keyword:', query)
+                            if not hasattr(status, 'retweeted_status'):
+                                number_of_react = status.favorite_count
+                            if hasattr(status, 'retweeted_status'):
+                                number_of_react = status.retweeted_status.favorite_count
+                            crawl_date = timezone.now()   
+                            p = Post.objects.create( 
+                                uuid_post= uuid.uuid4(), post_id = tweet_id ,post_content= post_content,create_date= create_date,
+                                link_detail= link_detail, number_of_reply= 0, language = language,
+                                number_of_retweet=number_of_retweet,number_of_react= number_of_react,crawl_date= crawl_date, keyword= query)
+                            p.save()
+                            uuid_post = p.uuid_post
+                            uuid_post_in_reply = Post.objects.only('uuid_post').get(uuid_post = uuid_post)
+                            
+                            for reply in tweepy.Cursor(api.search, q='to:{}'.format(username),
+                                                        since_id=tweet_id, tweet_mode='extended', lang='en').items():                         
+                                    try:
+                                        if not hasattr(reply, 'in_reply_to_status_id_str'):
+                                            continue
+                                        if reply.in_reply_to_status_id == tweet_id:
+                                            print("REPLYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+                                            print(reply.user.screen_name,':')
+                                            print(reply.full_text.encode('utf-8'))
+                                            link_reply_detail = 'https://twitter.com/',reply.user.screen_name,'/status/',reply.id
+                                            print("this is reply tweet's share: ", reply.retweet_count)
+                                            print("this is reply tweet's like: ", reply.favorite_count)
+                                            language = 'en'
+                                            reply_create = reply.created_at.replace(tzinfo=pytz.UTC)
+                                            c = Comment.objects.create(
+                                            uuid_comment= uuid.uuid4(), uuid_post = uuid_post_in_reply, comment_id=reply.id,
+                                            comment_content= reply.full_text.encode('utf-8'), create_date =reply_create,
+                                            link_detail= link_reply_detail , language = language,
+                                            number_of_reply =reply.retweet_count, number_of_react=reply.favorite_count,
+                                            crawl_date= crawl_date)
+                                            c.save()    
+                                            number_of_reply += 1;
+                                    except tweepy.RateLimitError as e:
+                                        logging.error("Twitter api rate limit reached {}".format(e)) 
+                                        time.sleep(900) 
+                                        continue
+                                    except tweepy.TweepError as e:
+                                        logging.error("Tweepy error occured:{}".format(e))
+                                        break
+                                    except tweepy.TweepError:
+                                        time.sleep(120)
+                                        continue
+                                    except Exception as e:
+                                        logging.error("Failed while fetching replies {}".format(e))
+                                        break
+                            updateReply = Post.objects.get(uuid_post = uuid_post)
+                            updateReply.number_of_reply = number_of_reply
+                            updateReply.save(update_fields=['number_of_reply'], force_update = True)              
     return redirect('blog-home')
 
    
